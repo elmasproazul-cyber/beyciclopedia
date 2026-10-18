@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyciclopedia - Beyblade X Database</title>
+    <!-- Favicon Logo -->
+    <link rel="icon" type="image/png" href="logito.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        beyBlue: '#00f0ff',
+                        beyDark: '#050811',
+                        beyCard: '#0f172a',
+                        beyAccent: '#ff0055',
+                        beyGold: '#ffd700',
+                    },
+                    boxShadow: {
+                        neon: '0 0 25px rgba(0, 240, 255, 0.4)',
+                        neonGlow: '0 0 50px rgba(0, 240, 255, 0.8)',
+                        redGlow: '0 0 35px rgba(255, 0, 85, 0.6)',
+                        yellowGlow: '0 0 35px rgba(234, 179, 8, 0.6)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050811;
+            color: #f1f5f9;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 0, 85, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        @keyframes auraPulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.2); }
+            50% { box-shadow: 0 0 45px rgba(0, 240, 255, 0.6), inset 0 0 25px rgba(0, 240, 255, 0.4); }
+        }
+
+        .aura-card {
+            animation: auraPulse 4s infinite ease-in-out;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080d1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+            border: 1px solid #00f0ff33;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-beyBlue selection:text-black">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 bg-beyDark/95 backdrop-blur-md border-b border-beyBlue/30 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-6">
+            
+            <!-- LOGO GIGANTE Y TÍTULO -->
+            <div class="flex flex-col sm:flex-row items-center gap-5 cursor-pointer text-center sm:text-left" onclick="resetFilters()">
+                <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center bg-slate-950/90 border-2 border-beyBlue rounded-3xl shadow-neonGlow overflow-hidden p-3 group transform hover:scale-105 transition-all duration-300">
+                    <img 
+                        src="logito.png" 
+                        alt="Beyciclopedia Logo" 
+                        class="w-full h-full object-contain filter drop-shadow-[0_0_25px_rgba(0,240,255,0.95)] group-hover:rotate-3 transition-transform duration-300"
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-compact-disc text-beyBlue text-7xl animate-spin-slow\'></i>';"
+                    />
+                </div>
+                <div>
+                    <h1 class="font-orbitron font-black text-3xl sm:text-4xl md:text-5xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-beyBlue via-white to-beyBlue drop-shadow-[0_0_15px_rgba(0,240,255,0.7)]">
+                        BEYCICLOPEDIA
+                    </h1>
+                    <p class="text-xs sm:text-sm text-cyan-400 font-mono tracking-widest uppercase mt-1.5 flex items-center justify-center sm:justify-start gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-beyBlue animate-ping"></span> Beyblade X Database
+                    </p>
+                </div>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="flex flex-col items-center md:items-end gap-3 w-full md:w-auto">
+                <div class="relative w-full sm:w-80 md:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400 text-base"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Buscar Bey, pieza o portador..." 
+                        class="w-full bg-slate-900/90 border border-cyan-500/40 rounded-full pl-11 pr-10 py-3 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-beyBlue focus:ring-2 focus:ring-beyBlue/50 transition-all duration-300 shadow-inner"
+                        oninput="handleSearch()"
+                    >
+                    <button id="clearSearch" onclick="clearSearchInput()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 bg-slate-900/80 border border-cyan-500/30 rounded-xl px-3.5 py-1.5 text-xs text-slate-300 shadow-md">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-semibold text-cyan-400 font-orbitron">BEYBLADE X ENGINE</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- CATÁLOGO DE CUADROS INDEPENDIENTES DE BEYBLADES -->
+        <section class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-black font-orbitron text-white flex items-center gap-3">
+                        <i class="fa-solid fa-layer-group text-beyBlue"></i> CATÁLOGO DE BEYBLADES
+                    </h2>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-1">
+                        Toca cualquier cuadro de Beyblade para abrir su visor con sus datos, piezas y portador.
+                    </p>
+                </div>
+            </div>
+
+            <!-- GRID DE CUADROS INDEPENDIENTES DE BEYS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="beyCatalogGrid">
+                
+                <!-- CUADRO: DRAN SWORD -->
+                <div onclick="openBeyDetailModal('dran-combo')" class="group relative bg-slate-900/90 border-2 border-cyan-500/40 hover:border-beyBlue rounded-3xl p-6 cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-xl hover:shadow-neon">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold font-orbitron px-3 py-1 rounded-full uppercase tracking-wider">
+                            ⚔️ Ataque
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-rotate-right mr-1"></i>Derecha</span>
+                    </div>
+
+                    <div class="w-48 h-48 mx-auto my-4 relative flex items-center justify-center bg-slate-950/60 rounded-2xl p-3 border border-slate-800 group-hover:border-beyBlue/50 transition-colors">
+                        <img 
+                            src="dran.webp" 
+                            alt="Dran Sword" 
+                            class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_12px_rgba(0,240,255,0.5)] group-hover:scale-110 transition-transform duration-300"
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-shield-halved text-6xl text-beyBlue\'></i>';"
+                        />
+                    </div>
+
+                    <h3 class="font-orbitron font-black text-xl text-white group-hover:text-beyBlue transition-colors text-center">
+                        Dran Sword 3-60 Flat
+                    </h3>
+                    <p class="text-xs text-slate-400 text-center mt-2 font-mono">
+                        Portador: <strong class="text-slate-200">Jaxon Cross (Kamen X)</strong>
+                    </p>
+
+                    <div class="mt-5 pt-3 border-t border-slate-800 flex items-center justify-center text-xs font-orbitron font-bold text-beyBlue group-hover:underline">
+                        VER DATOS Y PIEZAS <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- CUADRO: HELLS SCYTHE -->
+                <div onclick="openBeyDetailModal('hells-combo')" class="group relative bg-slate-900/90 border-2 border-red-500/40 hover:border-red-500 rounded-3xl p-6 cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-xl hover:shadow-redGlow">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold font-orbitron px-3 py-1 rounded-full uppercase tracking-wider">
+                            🔥 Equilibrio
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-rotate-right mr-1"></i>Derecha</span>
+                    </div>
+
+                    <div class="w-48 h-48 mx-auto my-4 relative flex items-center justify-center bg-slate-950/60 rounded-2xl p-3 border border-slate-800 group-hover:border-red-500/50 transition-colors">
+                        <img 
+                            src="flma.png" 
+                            alt="Hells Scythe" 
+                            class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_12px_rgba(255,0,85,0.5)] group-hover:scale-110 transition-transform duration-300"
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-sickle text-6xl text-red-500\'></i>';"
+                        />
+                    </div>
+
+                    <h3 class="font-orbitron font-black text-xl text-white group-hover:text-red-400 transition-colors text-center">
+                        Hells Scythe 4-60 Taper
+                    </h3>
+                    <p class="text-xs text-slate-400 text-center mt-2 font-mono">
+                        Portador: <strong class="text-slate-200">Robin Kazami</strong>
+                    </p>
+
+                    <div class="mt-5 pt-3 border-t border-slate-800 flex items-center justify-center text-xs font-orbitron font-bold text-red-400 group-hover:underline">
+                        VER DATOS Y PIEZAS <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- CUADRO: WIZARD ARROW -->
+                <div onclick="openBeyDetailModal('wizard-combo')" class="group relative bg-slate-900/90 border-2 border-yellow-500/40 hover:border-yellow-400 rounded-3xl p-6 cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-xl hover:shadow-yellowGlow">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 text-xs font-bold font-orbitron px-3 py-1 rounded-full uppercase tracking-wider">
+                            🔮 Resistencia
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-rotate-right mr-1"></i>Derecha</span>
+                    </div>
+
+                    <div class="w-48 h-48 mx-auto my-4 relative flex items-center justify-center bg-slate-950/60 rounded-2xl p-3 border border-slate-800 group-hover:border-yellow-400/50 transition-colors">
+                        <img 
+                            src="maguito.webp" 
+                            alt="Wizard Arrow" 
+                            class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_12px_rgba(234,179,8,0.5)] group-hover:scale-110 transition-transform duration-300"
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-hat-wizard text-6xl text-yellow-400\'></i>';"
+                        />
+                    </div>
+
+                    <h3 class="font-orbitron font-black text-xl text-white group-hover:text-yellow-400 transition-colors text-center">
+                        Wizard Arrow 4-80 Ball
+                    </h3>
+                    <p class="text-xs text-slate-400 text-center mt-2 font-mono">
+                        Portador: <strong class="text-slate-200">Multi Nanairo</strong>
+                    </p>
+
+                    <div class="mt-5 pt-3 border-t border-slate-800 flex items-center justify-center text-xs font-orbitron font-bold text-yellow-400 group-hover:underline">
+                        VER DATOS Y PIEZAS <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- BASE DE DATOS Y FILTROS GENERALES -->
+        <section class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h3 class="text-2xl font-black font-orbitron text-white flex items-center gap-2">
+                        <i class="fa-solid fa-database text-beyBlue"></i> BASE DE DATOS GENERAL
+                    </h3>
+                    <p class="text-slate-400 text-sm">Filtra piezas, Beys o portadores guardados en la Beyciclopedia.</p>
+                </div>
+
+                <!-- TAB FILTERS -->
+                <div class="flex flex-wrap gap-2" id="filterTabs">
+                    <button onclick="filterCategory('all')" class="tab-btn active px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-beyBlue text-black shadow-neon" data-cat="all">
+                        TODOS
+                    </button>
+                    <button onclick="filterCategory('beys')" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue" data-cat="beys">
+                        BEYS
+                    </button>
+                    <button onclick="filterCategory('blades')" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue" data-cat="blades">
+                        BLADES
+                    </button>
+                    <button onclick="filterCategory('ratchets')" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue" data-cat="ratchets">
+                        RATCHETS
+                    </button>
+                    <button onclick="filterCategory('bits')" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue" data-cat="bits">
+                        BITS
+                    </button>
+                    <button onclick="filterCategory('portadores')" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue" data-cat="portadores">
+                        PORTADORES
+                    </button>
+                </div>
+            </div>
+
+            <!-- DYNAMIC GRID RESULTS -->
+            <div id="databaseGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- JS Populated Items -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-beyDark border-t border-slate-800 mt-16 py-8 text-slate-500 text-xs text-center">
+        <div class="max-w-7xl mx-auto px-4 space-y-3">
+            <p class="font-orbitron text-slate-300 text-sm font-bold">BEYCICLOPEDIA &copy; 2026</p>
+            <p>Enciclopedia interactiva de Beyblade X. Todos los derechos reservados a Takara Tomy.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL VENTANA FLOTANTE: DATOS COMPLETOS DEL BEY SELECCIONADO -->
+    <div id="beyDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div id="beyModalContainer" class="relative w-full max-w-5xl bg-slate-900/95 border-2 border-beyBlue/60 rounded-3xl p-5 sm:p-8 text-white shadow-neonGlow transform scale-95 transition-transform duration-300 overflow-y-auto max-h-[92vh]">
+            
+            <!-- Botón X para cerrar modal -->
+            <button 
+                onclick="closeBeyDetailModal()" 
+                title="Cerrar visor de Beyblade" 
+                class="absolute top-4 right-4 z-30 w-11 h-11 rounded-full bg-slate-950/90 border-2 border-cyan-400 text-cyan-400 hover:text-white hover:border-beyBlue hover:bg-beyBlue/30 flex items-center justify-center transition-all duration-300 shadow-neon"
+            >
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+
+            <!-- CONTENIDO DINÁMICO DEL BEYBLADE -->
+            <div id="beyModalBody" class="space-y-8">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SECUNDARIO: FICHA TÉCNICA DE PIEZAS INDIVIDUALES -->
+    <div id="pieceModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div id="modalContainer" class="relative w-full max-w-2xl bg-slate-900 border-2 border-beyBlue/50 rounded-3xl p-6 sm:p-8 text-white shadow-neonGlow transform scale-95 transition-transform duration-300 overflow-y-auto max-h-[90vh]">
+            
+            <button onclick="closePieceModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-beyBlue hover:border-beyBlue transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div id="modalBody">
+                <!-- Filled dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        const database = [
+            // BLADES
+            {
+                id: 'dran',
+                name: 'Dran Sword ⚔️',
+                category: 'blades',
+                type: 'Ataque',
+                image: 'dran.webp',
+                fallbackIcon: 'fa-solid fa-shield-halved',
+                giro: 'Derecha',
+                weight: '~35.0g',
+                portador: 'Jaxon Cross (Kamen X)',
+                desc: 'La Blade Dran Sword es de tipo ataque y gira hacia la derecha. Tiene tres puntos de contacto inclinados que le permiten golpear al rival con fuerza e intentar desestabilizarlo o expulsarlo del estadio. Su diseño está inspirado en una espada y favorece los impactos agresivos.',
+                stats: { ataque: 95, defensa: 35, resistencia: 30, peso: 85, velocidad: 90, burst: 85 }
+            },
+            {
+                id: 'hells',
+                name: 'Hells Scythe 🔥',
+                category: 'blades',
+                type: 'Equilibrio',
+                image: 'flma.png',
+                fallbackIcon: 'fa-solid fa-sickle',
+                giro: 'Derecha',
+                weight: '~34.5g',
+                portador: 'Robin Kazami',
+                desc: 'Tiene un diseño inspirado en una guadaña, con cuatro grandes puntos de contacto que le permiten golpear al rival desde diferentes ángulos. Su forma genera impactos potentes y movimientos impredecibles, combinando capacidades ofensivas con una buena estabilidad durante el combate.',
+                stats: { ataque: 75, defensa: 65, resistencia: 70, peso: 75, velocidad: 70, burst: 75 }
+            },
+            {
+                id: 'wizard',
+                name: 'Wizard Arrow 🔮',
+                category: 'blades',
+                type: 'Resistencia',
+                image: 'maguito.webp',
+                fallbackIcon: 'fa-solid fa-hat-wizard',
+                giro: 'Derecha',
+                weight: '~32.0g',
+                portador: 'Multi Nanairo',
+                desc: 'Tiene una forma redondeada con bordes suaves y dos grandes zonas de contacto que ayudan a desviar los golpes del rival. Su diseño busca reducir el retroceso al recibir impactos, permitiéndole mantener la estabilidad durante el combate. Está pensado para resistir los ataques enemigos y aprovechar su capacidad de giro para ganar por resistencia.',
+                stats: { ataque: 35, defensa: 45, resistencia: 85, peso: 40, velocidad: 50, burst: 40 }
+            },
+
+            // RATCHETS
+            {
+                id: '3-60',
+                name: 'Ratchet 3-60',
+                category: 'ratchets',
+                type: 'Ataque',
+                image: '60.webp',
+                fallbackIcon: 'fa-solid fa-gear',
+                height: '60 (6.0mm)',
+                salientes: '3 puntos',
+                desc: 'Tiene tres salientes que forman parte de su diseño y una altura de 60, lo que permite mantener la Blade en una posición relativamente baja. Su estructura compacta favorece los combos de ataque y ayuda a reducir la exposición a ciertos golpes del rival.',
+                stats: { ataque: 70, defensa: 60, resistencia: 55, peso: 65, velocidad: 70, burst: 80 }
+            },
+            {
+                id: '4-60',
+                name: 'Ratchet 4-60',
+                category: 'ratchets',
+                type: 'Equilibrio',
+                image: '4.webp',
+                fallbackIcon: 'fa-solid fa-gear',
+                height: '60 (6.0mm)',
+                salientes: '4 puntos',
+                desc: 'Tiene cuatro salientes en su estructura y una altura de 60, que equivale a 6 mm. Su perfil bajo ayuda a mantener el Beyblade cerca del estadio, mientras que sus cuatro puntos de contacto influyen en cómo recibe los golpes.',
+                stats: { ataque: 60, defensa: 75, resistencia: 65, peso: 70, velocidad: 60, burst: 75 }
+            },
+            {
+                id: '4-80',
+                name: 'Ratchet 4-80',
+                category: 'ratchets',
+                type: 'Resistencia',
+                image: '80.webp',
+                fallbackIcon: 'fa-solid fa-gear',
+                height: '80 (8.0mm)',
+                salientes: '4 puntos',
+                desc: 'Tiene cuatro salientes y una altura de 80, equivalente a 8 mm. Su estructura eleva la Blade respecto a un Ratchet 4-60, lo que modifica la altura de los puntos de contacto durante el combate.',
+                stats: { ataque: 40, defensa: 55, resistencia: 80, peso: 60, velocidad: 50, burst: 60 }
+            },
+
+            // BITS
+            {
+                id: 'flat',
+                name: 'Bit: Flat (F)',
+                category: 'bits',
+                type: 'Ataque',
+                image: 'fla.webp',
+                fallbackIcon: 'fa-solid fa-play rotate-90',
+                desc: 'Tiene una punta plana que permite desplazamientos rápidos y agresivos por el estadio. Favorece los ataques directos y los golpes potentes contra el rival. Su diseño facilita los movimientos amplios y las embestidas a gran velocidad.',
+                stats: { ataque: 90, defensa: 30, resistencia: 25, peso: 50, velocidad: 98, burst: 90 }
+            },
+            {
+                id: 'taper',
+                name: 'Bit: Taper (T)',
+                category: 'bits',
+                type: 'Equilibrio',
+                image: 'taper.webp',
+                fallbackIcon: 'fa-solid fa-circle-dot',
+                desc: 'Tiene una punta estrecha y plana rodeada por una superficie redondeada que permite combinar movilidad con resistencia de giro. Puede desplazarse para atacar al rival y realizar movimientos por la línea Xtreme del estadio.',
+                stats: { ataque: 70, defensa: 65, resistencia: 70, peso: 55, velocidad: 75, burst: 80 }
+            },
+            {
+                id: 'ball',
+                name: 'Bit: Ball (B)',
+                category: 'bits',
+                type: 'Resistencia',
+                image: 'nola.webp',
+                fallbackIcon: 'fa-solid fa-circle',
+                desc: 'Punta esférica de baja fricción que proporciona máxima estabilidad central y duración de giro prolongada.',
+                stats: { ataque: 20, defensa: 60, resistencia: 95, peso: 50, velocidad: 40, burst: 80 }
+            },
+
+            // COMBOS BEYS
+            {
+                id: 'dran-combo',
+                name: 'Dran Sword 3-60 Flat',
+                category: 'beys',
+                type: 'Ataque Completo',
+                image: 'dran.webp',
+                giro: 'Derecha',
+                portador: 'Jaxon Cross (Kamen X)',
+                portadorImg: 'x.webp',
+                bladeId: 'dran',
+                ratchetId: '3-60',
+                bitId: 'flat',
+                desc: 'Combo de ataque agresivo. Maximiza los golpes potentes con el Xtreme Dash para desestabilizar al rival.',
+                stats: { ataque: 95, defensa: 35, resistencia: 30, peso: 85, velocidad: 90, burst: 85 },
+                combos: [
+                    { title: 'Dran Sword 3-60 Flat', badge: 'Meta Directo', desc: 'El combo original optimizado para el X-Dash.', strat: 'Lanzamiento inclinado', pro: 'Over Finish' },
+                    { title: 'Dran Sword 1-60 Rush', badge: 'Control Móvil', desc: 'Patrón constante y mejor estamina.', strat: 'Ataque multinivel', pro: 'Mayor conservación' },
+                    { title: 'Dran Sword 5-60 Taper', badge: 'Híbrido', desc: 'Equilibra masa e impacto.', strat: 'Ataque centrado', pro: 'Balance general' }
+                ]
+            },
+            {
+                id: 'hells-combo',
+                name: 'Hells Scythe 4-60 Taper',
+                category: 'beys',
+                type: 'Equilibrio Completo',
+                image: 'flma.png',
+                giro: 'Derecha',
+                portador: 'Robin Kazami',
+                portadorImg: 'pajarito.webp',
+                bladeId: 'hells',
+                ratchetId: '4-60',
+                bitId: 'taper',
+                desc: 'Beyblade versátil que combina capacidad ofensiva con excelente estabilidad durante el combate.',
+                stats: { ataque: 75, defensa: 65, resistencia: 70, peso: 75, velocidad: 70, burst: 75 },
+                combos: [
+                    { title: 'Hells Scythe 4-60 Taper', badge: 'Equilibrio Puro', desc: 'Sólida estamina y contragolpe.', strat: 'Lanzamiento plano', pro: 'Adaptabilidad' },
+                    { title: 'Hells Scythe 3-60 Ball', badge: 'Defensa / Estamina', desc: 'Fortaleza inamovible con Bit Ball.', strat: 'Lanzamiento al centro', pro: 'Outspin' }
+                ]
+            },
+            {
+                id: 'wizard-combo',
+                name: 'Wizard Arrow 4-80 Ball',
+                category: 'beys',
+                type: 'Resistencia Completa',
+                image: 'maguito.webp',
+                giro: 'Derecha',
+                portador: 'Multi Nanairo',
+                portadorImg: 'rosa.webp',
+                bladeId: 'wizard',
+                ratchetId: '4-80',
+                bitId: 'ball',
+                desc: 'Especialista en giro prolongado y absorción de ataques mediante sus bordes redondeados.',
+                stats: { ataque: 35, defensa: 45, resistencia: 85, peso: 40, velocidad: 50, burst: 40 },
+                combos: [
+                    { title: 'Wizard Arrow 4-80 Ball', badge: 'Stock Resistencia', desc: 'Máximo giro central.', strat: 'Lanzamiento directo', pro: 'Outspin constante' }
+                ]
+            },
+
+            // PORTADORES
+            {
+                id: 'ekusu',
+                name: 'Jaxon Cross (Kamen X)',
+                category: 'portadores',
+                image: 'x.webp',
+                fallbackIcon: 'fa-solid fa-user-ninja',
+                desc: 'Blader genial de Team Persona que compite bajo la máscara de Kamen X. Su Bey es Dran Sword.',
+                stats: { habilidad: 98, agresividad: 95, estrategia: 88, tecnica: 92 }
+            },
+            {
+                id: 'robin',
+                name: 'Robin Kazami',
+                category: 'portadores',
+                image: 'pajarito.webp',
+                fallbackIcon: 'fa-solid fa-feather',
+                desc: 'Blader de Team Persona con gran voluntad para superarse. Su Bey es Hells Scythe.',
+                stats: { habilidad: 85, agresividad: 80, estrategia: 92, tecnica: 88 }
+            },
+            {
+                id: 'multi',
+                name: 'Multi Nanairo',
+                category: 'portadores',
+                image: 'rosa.webp',
+                fallbackIcon: 'fa-solid fa-wand-magic-sparkles',
+                desc: 'Influencer y blader prodigio experta en personalización. Su Bey es Wizard Arrow.',
+                stats: { habilidad: 94, agresividad: 75, estrategia: 96, tecnica: 95 }
+            }
+        ];
+
+        let currentCategory = 'all';
+
+        window.onload = function() {
+            renderDatabaseGrid(database);
+        };
+
+        // ABRE EL BEY SELECCIONADO DENTRO DE UN CUADRO/MODAL FLOTANTE
+        function openBeyDetailModal(beyId) {
+            const bey = database.find(b => b.id === beyId);
+            if (!bey) return;
+
+            const modal = document.getElementById('beyDetailModal');
+            const container = document.getElementById('beyModalContainer');
+            const body = document.getElementById('beyModalBody');
+
+            const blade = database.find(d => d.id === bey.bladeId);
+            const ratchet = database.find(d => d.id === bey.ratchetId);
+            const bit = database.find(d => d.id === bey.bitId);
+
+            body.innerHTML = `
+                <!-- CABECERA DEL BEYBLADE -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border-b border-slate-800 pb-6">
+                    <div class="lg:col-span-5 flex flex-col items-center text-center">
+                        <div class="relative group cursor-pointer" onclick="openPieceModal('${bey.bladeId}')">
+                            <div class="absolute -inset-4 bg-gradient-to-r from-beyBlue to-blue-600 rounded-full opacity-40 group-hover:opacity-80 blur-xl transition duration-500"></div>
+                            <div class="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl bg-slate-950/90 border-2 border-cyan-400/60 flex items-center justify-center p-4 shadow-2xl backdrop-blur-sm transform group-hover:scale-105 transition-all">
+                                <img src="${bey.image}" alt="${bey.name}" class="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(0,240,255,0.6)]" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-compact-disc text-6xl text-beyBlue\'></i>';"/>
+                            </div>
+                        </div>
+
+                        <!-- CARD DEL PORTADOR -->
+                        <div class="mt-6 bg-slate-950/90 border border-cyan-500/40 rounded-2xl p-3.5 w-full max-w-xs flex items-center justify-between shadow-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-900 flex-shrink-0 flex items-center justify-center shadow-goldGlow">
+                                    <img src="${bey.portadorImg}" alt="${bey.portador}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-user-ninja text-amber-400 text-xl\'></i>';"/>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-mono">Portador Oficial</span>
+                                    <span class="font-bold text-sm text-slate-100 font-orbitron">${bey.portador}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 space-y-5">
+                        <span class="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-bold font-orbitron px-3 py-1 rounded-full uppercase tracking-wider">
+                            ${bey.type}
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black font-orbitron text-white">${bey.name}</h2>
+                        <p class="text-slate-300 text-sm leading-relaxed">${bey.desc}</p>
+
+                        <!-- ESTADÍSTICAS ANIMADAS -->
+                        <div class="space-y-2 pt-2">
+                            <h4 class="text-xs font-orbitron font-bold text-cyan-400 tracking-wider">ESTADÍSTICAS DEL COMBATIENTE</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <div class="flex justify-between text-xs mb-1 font-mono"><span>Ataque</span><span class="text-cyan-400">${bey.stats.ataque}</span></div>
+                                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-beyBlue h-full" style="width: ${bey.stats.ataque}%"></div></div>
+                                </div>
+                                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <div class="flex justify-between text-xs mb-1 font-mono"><span>Defensa</span><span class="text-cyan-400">${bey.stats.defensa}</span></div>
+                                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-emerald-400 h-full" style="width: ${bey.stats.defensa}%"></div></div>
+                                </div>
+                                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <div class="flex justify-between text-xs mb-1 font-mono"><span>Resistencia</span><span class="text-cyan-400">${bey.stats.resistencia}</span></div>
+                                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-amber-400 h-full" style="width: ${bey.stats.resistencia}%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESGLOSE DE PIEZAS STOCK -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-black font-orbitron text-white flex items-center gap-2">
+                        <i class="fa-solid fa-cubes text-beyBlue"></i> PIEZAS STOCK DEL COMBO
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${[blade, ratchet, bit].map(p => p ? `
+                            <div onclick="openPieceModal('${p.id}')" class="group bg-slate-950/80 border border-slate-800 hover:border-beyBlue rounded-2xl p-4 cursor-pointer transform hover:-translate-y-1 transition-all shadow-md">
+                                <div class="w-24 h-24 mx-auto mb-3 flex items-center justify-center">
+                                    <img src="${p.image}" alt="${p.name}" class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:scale-110 transition-transform" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'${p.fallbackIcon} text-4xl text-beyBlue\'></i>';"/>
+                                </div>
+                                <h4 class="font-orbitron font-bold text-base text-white group-hover:text-beyBlue text-center">${p.name}</h4>
+                                <p class="text-xs text-slate-400 mt-1 line-clamp-2 text-center">${p.desc}</p>
+                            </div>
+                        ` : '').join('')}
+                    </div>
+                </div>
+
+                <!-- COMBOS COMPETITIVOS -->
+                <div class="space-y-4 pt-2">
+                    <h3 class="text-xl font-black font-orbitron text-white flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-400"></i> COMBOS RECOMENDADOS Y VARIACIONES
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${bey.combos.map(c => `
+                            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                                <span class="bg-amber-400/20 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded uppercase font-orbitron">${c.badge}</span>
+                                <h4 class="font-orbitron font-bold text-base text-white mt-2 mb-1">${c.title}</h4>
+                                <p class="text-xs text-slate-300 leading-relaxed">${c.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+
+        // CIERRA EL CUADRO Y REGRESA AL CATÁLOGO
+        function closeBeyDetailModal() {
+            const modal = document.getElementById('beyDetailModal');
+            const container = document.getElementById('beyModalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function renderDatabaseGrid(items) {
+            const grid = document.getElementById('databaseGrid');
+            grid.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/80 border border-slate-800 hover:border-beyBlue rounded-2xl p-5 flex flex-col justify-between cursor-pointer transform hover:-translate-y-1 transition-all shadow-md hover:shadow-neon group';
+                card.onclick = () => {
+                    if (item.category === 'beys') openBeyDetailModal(item.id);
+                    else openPieceModal(item.id);
+                };
+                card.innerHTML = `
+                    <div>
+                        <div class="w-24 h-24 mx-auto my-3 flex items-center justify-center">
+                            <img src="${item.image}" alt="${item.name}" class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_6px_rgba(0,240,255,0.3)] group-hover:scale-105 transition-transform" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'${item.fallbackIcon || 'fa-solid fa-cube'} text-4xl text-cyan-400\'></i>';"/>
+                        </div>
+                        <h4 class="font-orbitron font-bold text-slate-100 text-base group-hover:text-beyBlue mt-2">${item.name}</h4>
+                        <p class="text-xs text-slate-400 mt-1 line-clamp-2">${item.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = btn.getAttribute('data-cat') === category 
+                    ? 'tab-btn active px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-beyBlue text-black shadow-neon'
+                    : 'tab-btn px-4 py-2 rounded-xl text-xs font-bold font-orbitron transition-all bg-slate-900 text-slate-300 border border-slate-800 hover:border-beyBlue';
+            });
+            applyFilters();
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            document.getElementById('clearSearch').classList.toggle('hidden', query.length === 0);
+            applyFilters();
+        }
+
+        function clearSearchInput() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearch').classList.add('hidden');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = database.filter(item => {
+                const matchesCategory = (currentCategory === 'all') || (item.category === currentCategory);
+                const matchesQuery = !query || item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query);
+                return matchesCategory && matchesQuery;
+            });
+            renderDatabaseGrid(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearch').classList.add('hidden');
+            filterCategory('all');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openPieceModal(id) {
+            const item = database.find(d => d.id === id);
+            if (!item) return;
+
+            const modal = document.getElementById('pieceModal');
+            const container = document.getElementById('modalContainer');
+            const modalBody = document.getElementById('modalBody');
+
+            modalBody.innerHTML = `
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-40 h-40 bg-slate-950 p-4 rounded-2xl border border-cyan-500/40 flex items-center justify-center flex-shrink-0">
+                        <img src="${item.image}" alt="${item.name}" class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_12px_rgba(0,240,255,0.5)]" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'${item.fallbackIcon || 'fa-solid fa-cube'} text-6xl text-beyBlue\'></i> me';"/>
+                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-2xl font-black font-orbitron text-white">${item.name}</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800">${item.desc}</p>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closePieceModal() {
+            const modal = document.getElementById('pieceModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        document.getElementById('beyDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBeyDetailModal();
+        });
+
+        document.getElementById('pieceModal').addEventListener('click', function(e) {
+            if (e.target === this) closePieceModal();
+        });
+    </script>
+</body>
+</html>
